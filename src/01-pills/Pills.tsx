@@ -1,10 +1,10 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { PillData } from './data'
 import { Pill } from './Pill'
 
 interface PillsProps {
   pills: PillData[]
-  headers: string[] // ids of pills that are toggled on
+  headers: string[]
   toggleHeader: (id: string) => void
 }
 
@@ -22,10 +22,10 @@ interface LayoutPillElement {
 type LayoutElement = LayoutBreakElement | LayoutPillElement
 
 export function Pills({ pills, headers, toggleHeader }: PillsProps) {
-  const containerNode = React.useRef<HTMLDivElement>(null)
-  const pillRefs = React.useRef<{ [id: PillData['id']]: HTMLDivElement }>({})
+  const containerNode = useRef<HTMLDivElement>(null)
+  const pillRefs = useRef<{ [id: PillData['id']]: HTMLDivElement }>({})
 
-  const [layoutElements, setLayoutElements] = React.useState<LayoutElement[]>(() => {
+  const [layoutElements, setLayoutElements] = useState<LayoutElement[]>(() => {
     return pills.map(pill => ({
       index: pill.id,
       type: 'pill',
@@ -49,11 +49,68 @@ export function Pills({ pills, headers, toggleHeader }: PillsProps) {
     }
   }
 
+  const recalculateLayout = () => {
+    const containerWidth = containerNode.current?.clientWidth || 0
+    //@ts-ignore
+    let currentLine = []
+    let lineWidth = 0
+    let maxLineWidth = 0
+
+    layoutElements.forEach((el, index) => {
+      if (el.type === 'line-break') {
+        if (lineWidth > maxLineWidth) {
+          maxLineWidth = lineWidth
+        }
+        lineWidth = 0
+      } else {
+        const pillRef = pillRefs.current[el.pill.id]
+        const pillWidth = pillRef?.offsetWidth + 30 || 0
+
+        if (lineWidth + pillWidth > containerWidth) {
+          currentLine.push({ index: el.index, type: 'line-break' })
+          lineWidth = 0
+        }
+
+        currentLine.push(el)
+        lineWidth += pillWidth
+      }
+    })
+    //@ts-ignore
+    console.log(currentLine)
+
+    //@ts-ignore
+    setLayoutElements(currentLine)
+  }
+  useEffect(() => {
+    recalculateLayout()
+
+    window.addEventListener('resize', recalculateLayout)
+
+    return () => {
+      window.removeEventListener('resize', recalculateLayout)
+    }
+  }, [])
+
   return (
-    <div ref={containerNode}>
+    <div
+      ref={containerNode}
+      style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '8px',
+      }}
+    >
       {layoutElements.map(el => {
         if (el.type === 'line-break') {
-          return <br key={`__${el.type}-${el.index}`} />
+          return (
+            <div
+              style={{
+                flexBasis: '100%',
+                height: '0',
+              }}
+              key={`__${el.type}-${el.index}`}
+            />
+          )
         } else {
           return (
             <Pill
