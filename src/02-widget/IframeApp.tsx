@@ -2,30 +2,18 @@ import React, { useEffect } from 'react'
 
 export const IframeApp = () => {
   const onResize = () => {
-    console.log('resize')
-    window.parent.postMessage(
+    window.parent.window.parent.postMessage(
       {
         type: 'resize',
-        //20 is accounting for horizontal bars
-        height: document.body.scrollHeight + 20,
-        width: document.body.scrollWidth,
+        //18 is accounting for horizontal bars
+        height: document.body.scrollHeight + 18,
       },
       '*'
     )
   }
 
-  const handleParentResize = (event: MessageEvent) => {
-    onResize()
-  }
-
   useEffect(() => {
     onResize()
-
-    window.addEventListener('message', handleParentResize)
-
-    return () => {
-      window.removeEventListener('message', handleParentResize)
-    }
   }, [])
 
   return (

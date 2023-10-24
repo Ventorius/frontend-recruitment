@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 
 import './widget.css'
-import useResizeObserver from './useResizeObserver'
 
 export const Widget = () => {
   const [width, setWidth] = useState<number | undefined>()
@@ -10,27 +9,16 @@ export const Widget = () => {
   const iframeContainer = useRef<HTMLIFrameElement | null>(null)
   const iframe = useRef<HTMLIFrameElement | null>(null)
 
-  const sendMessage = () => {
-    if (iframe.current) {
-      iframe?.current?.contentWindow?.postMessage({
-        type: 'analytics',
-      })
-    }
-  }
-
   useEffect(() => {
     const measurements = iframeContainer?.current?.getBoundingClientRect()
     if (measurements) {
       setWidth(measurements.width)
     }
   }, [])
-  //@ts-ignore
-  useResizeObserver(sendMessage, document.body)
 
   const handleResize = (event: MessageEvent) => {
     if (event?.data?.type === 'resize') {
       setHeight(event.data.height)
-      // setWidth(event.data.width)
     }
   }
 
