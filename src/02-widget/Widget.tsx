@@ -16,6 +16,9 @@ export const Widget = () => {
     }
   }, [])
 
+  //I tried to use useResizeObserver here to dynamically change width (extra task)
+  // but it didn't work properly, implementation of custom hook can be found in separate file
+
   const handleResize = (event: MessageEvent) => {
     if (event?.data?.type === 'resize') {
       setHeight(event.data.height)
