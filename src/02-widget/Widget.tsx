@@ -1,23 +1,35 @@
-import React, { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useLayoutEffect } from 'react'
 
 import './widget.css'
 
-export const Widget = () => {
+const useResizeObserver = () => {
   const [width, setWidth] = useState<number | undefined>()
   const [height, setHeight] = useState<number | undefined>()
 
-  const iframeContainer = useRef<HTMLIFrameElement | null>(null)
-  const iframe = useRef<HTMLIFrameElement | null>(null)
+  const iframeContainer = useRef<HTMLDivElement | null>(null)
 
-  useEffect(() => {
-    const measurements = iframeContainer?.current?.getBoundingClientRect()
-    if (measurements) {
-      setWidth(measurements.width)
+  useLayoutEffect(() => {
+    const resizeObserver = new ResizeObserver(entries => {
+      const { width, height } = entries[0].contentRect
+      setWidth(width)
+      setHeight(height)
+    })
+
+    resizeObserver.observe(iframeContainer.current!)
+
+    return () => {
+      resizeObserver.disconnect()
     }
   }, [])
 
-  //I tried to use useResizeObserver here to dynamically change width (extra task)
-  // but it didn't work properly, implementation of custom hook can be found in separate file
+  return { width, height, iframeContainer }
+}
+
+export const Widget = () => {
+  const [height, setHeight] = useState<number | undefined>()
+
+  const { width, iframeContainer } = useResizeObserver()
+  const iframe = useRef<HTMLIFrameElement | null>(null)
 
   const handleResize = (event: MessageEvent) => {
     if (event?.data?.type === 'resize') {
